@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from "react";
+import { PRODUCT_CATEGORIES } from "@/constants/productCategories";
 import styles from "./admin.module.css";
 
 const metrics = [
@@ -20,7 +21,7 @@ const initialProducts: ProductItem[] = [
   },
   {
     id: "P002",
-    name: "Batata Rustica",
+    name: "Batata rústica",
     category: "Porção",
     price: "R$ 21,90",
     status: "Ativo",
@@ -126,7 +127,9 @@ export default function Admin() {
 
     setDraft({
       name: target.name,
-      category: target.category,
+      category: (PRODUCT_CATEGORIES as readonly string[]).includes(target.category)
+        ? target.category
+        : "",
       price: target.price.replace("R$ ", "").replace(",", "."),
       description: target.description ?? "",
       imageName: target.imageName ?? "",
@@ -504,11 +507,20 @@ export default function Admin() {
               </label>
               <label>
                 Categoria
-                <input
+                <select
                   value={draft.category}
                   onChange={(e) => setDraft((old) => ({ ...old, category: e.target.value }))}
                   required
-                />
+                >
+                  <option value="" disabled>
+                    Selecione uma categoria
+                  </option>
+                  {PRODUCT_CATEGORIES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 Preço

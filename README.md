@@ -60,3 +60,9 @@ npm run db:migrate -- --name init
 ```bash
 npm run db:studio
 ```
+
+7. Popular categorias padrão do cardápio (tabela `Category`):
+
+```bash
+npm run db:seed
+```
