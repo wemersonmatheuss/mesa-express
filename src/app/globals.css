@@ -4,6 +4,36 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Cores base */
+  --bg-main: #0b0b0f;
+  --bg-secondary: #111117;
+  --bg-glass: rgba(255, 255, 255, 0.05);
+
+  /* Destaque */
+  --primary: #ff6a00;
+  --primary-hover: #ff8533;
+
+  /* Texto */
+  --text-main: #ffffff;
+  --text-secondary: #a1a1aa;
+
+  /* Borda */
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Gradiente */
+  --gradient-main: linear-gradient(135deg, #ff6a00, #ff2e00);
+
+  /* Radius */
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Sombra */
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
 body {
+  background: radial-gradient(circle at top left, #1a1a22, #050507);
+  color: var(--text-main);
   font-family: Arial, sans-serif;
 }
