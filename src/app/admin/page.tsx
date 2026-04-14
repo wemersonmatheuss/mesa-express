@@ -6,7 +6,7 @@ import styles from "./admin.module.css";
 const metrics = [
   { label: "Pedidos hoje", value: "128", trend: "+12%" },
   { label: "Faturamento do dia", value: "R$ 3.420", trend: "+8%" },
-  { label: "Ticket medio", value: "R$ 48,90", trend: "+5%" },
+  { label: "Ticket médio", value: "R$ 48,90", trend: "+5%" },
   { label: "Mesas ativas", value: "14", trend: "Agora" },
 ];
 
@@ -14,14 +14,14 @@ const initialProducts: ProductItem[] = [
   {
     id: "P001",
     name: "Smash Bacon",
-    category: "Hamburguer",
+    category: "Hambúrguer",
     price: "R$ 34,90",
     status: "Ativo",
   },
   {
     id: "P002",
     name: "Batata Rustica",
-    category: "Porcao",
+    category: "Porção",
     price: "R$ 21,90",
     status: "Ativo",
   },
@@ -42,14 +42,16 @@ const initialProducts: ProductItem[] = [
 ];
 
 const orders = [
-  { code: "#1251", customer: "Lucas (Mesa 08)", status: "Em preparacao" },
-  { code: "#1252", customer: "Aline (Mesa 03)", status: "Concluido" },
+  { code: "#1251", customer: "Lucas (Mesa 08)", status: "Em preparação" },
+  { code: "#1252", customer: "Aline (Mesa 03)", status: "Concluído" },
   { code: "#1253", customer: "Pedro (Mesa 11)", status: "Novo pedido" },
 ];
 
 export default function Admin() {
   const [products, setProducts] = useState(initialProducts);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string[]>([]);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -71,6 +73,33 @@ export default function Admin() {
   });
 
   const previewProducts = useMemo(() => products.slice(0, 4), [products]);
+
+  function generateAiSummary() {
+    const totalProducts = products.length;
+    const activeProducts = products.filter((item) => item.status === "Ativo").length;
+    const inactiveProducts = totalProducts - activeProducts;
+    const preparingOrders = orders.filter((item) => item.status === "Em preparação").length;
+    const doneOrders = orders.filter((item) => item.status === "Concluído").length;
+    const newOrders = orders.filter((item) => item.status === "Novo pedido").length;
+
+    const topCategory =
+      products.reduce<Record<string, number>>((acc, current) => {
+        acc[current.category] = (acc[current.category] ?? 0) + 1;
+        return acc;
+      }, {});
+    const sortedCategories = Object.entries(topCategory).sort((a, b) => b[1] - a[1]);
+
+    const summary = [
+      `Visão geral: ${totalProducts} produtos cadastrados (${activeProducts} ativos e ${inactiveProducts} inativos).`,
+      `Pedidos recentes: ${preparingOrders} em preparação, ${doneOrders} concluídos e ${newOrders} novos.`,
+      `Categoria em destaque: ${sortedCategories[0]?.[0] ?? "N/D"}.`,
+      "Recomendação: mantenha os itens mais vendidos ativos, revise os inativos com baixa saída e monitore o tempo de preparo no horário de pico.",
+    ];
+
+    setAiSummary(summary);
+    setIsAiOpen(true);
+    setIsReportsOpen(false);
+  }
 
   function resetForm() {
     setDraft({
@@ -187,35 +216,52 @@ export default function Admin() {
   function getPasswordTitle() {
     if (!pendingAction) return "";
     if (pendingAction.type === "create") return "Confirmar cadastro de produto";
-    if (pendingAction.type === "edit") return "Confirmar edicao de produto";
-    return "Confirmar exclusao de produto";
+    if (pendingAction.type === "edit") return "Confirmar edição de produto";
+    return "Confirmar exclusão de produto";
   }
 
   return (
     <main className={styles.page}>
       <section className={styles.header}>
         <div className={styles.headerMain}>
-          <span className={styles.kicker}>Area administrativa</span>
+          <span className={styles.kicker}>Área administrativa</span>
           <h1>
             <span className={styles.brand}>MesaExpress</span>
             <span className={styles.titleLight}> Control Center</span>
           </h1>
           <p>
-            Gerencie cardapio, acompanhe pedidos em tempo real e tenha uma visao
-            clara da operacao do seu restaurante.
+            Gerencie cardápio, acompanhe pedidos em tempo real e tenha uma visão
+            clara da operação do seu restaurante.
           </p>
           <div className={styles.headerBadges}>
             <span>Online agora: 14 mesas</span>
-            <span>Ultima atualizacao: ha 1 min</span>
+            <span>Última atualização: há 1 min</span>
           </div>
         </div>
         <div className={styles.headerActions}>
           <button
             type="button"
-            className={styles.secondaryButton}
+            className={`${styles.secondaryButton} ${styles.iconButton}`}
+            onClick={generateAiSummary}
+          >
+            <span className={styles.minimalIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M8 9h8M8 13h8M8 17h5M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+              </svg>
+            </span>
+            Resumo IA
+          </button>
+          <button
+            type="button"
+            className={`${styles.secondaryButton} ${styles.iconButton}`}
             onClick={() => setIsReportsOpen((prev) => !prev)}
           >
-            Ver relatorios
+            <span className={styles.minimalIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M5 19V9M12 19V5M19 19v-7M4 19h16" />
+              </svg>
+            </span>
+            Ver relatórios
           </button>
           <button type="button" className={styles.primaryButton} onClick={openCreateForm}>
             + Cadastrar produto
@@ -225,22 +271,42 @@ export default function Admin() {
 
       {isReportsOpen && (
         <section className={styles.reportPanel}>
-          <h2>Relatorios rapidos</h2>
+          <h2>Relatórios rápidos</h2>
           <div className={styles.reportGrid}>
             <article>
               <strong>Produto mais vendido</strong>
               <p>Smash Bacon (31 pedidos hoje)</p>
             </article>
             <article>
-              <strong>Horario de pico</strong>
+              <strong>Horário de pico</strong>
               <p>19:00 - 21:00 (43% dos pedidos)</p>
             </article>
             <article>
               <strong>Status operacional</strong>
-              <p>Cozinha com tempo medio de 18 min por pedido</p>
+              <p>Cozinha com tempo médio de 18 min por pedido</p>
             </article>
           </div>
         </section>
+      )}
+
+      {isAiOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <header className={styles.modalHeader}>
+              <h3>Resumo inteligente do admin</h3>
+              <button type="button" onClick={() => setIsAiOpen(false)}>
+                Fechar
+              </button>
+            </header>
+            <div className={styles.aiSummaryBody}>
+              <ul>
+                {aiSummary.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
       )}
 
       <section className={styles.metricsGrid}>
@@ -273,9 +339,9 @@ export default function Admin() {
                   <th>ID</th>
                   <th>Produto</th>
                   <th>Categoria</th>
-                  <th>Preco</th>
+                  <th>Preço</th>
                   <th>Status</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -335,9 +401,9 @@ export default function Admin() {
                   </div>
                   <span
                     className={`${styles.orderStatus} ${
-                      order.status === "Concluido"
+                      order.status === "Concluído"
                         ? styles.statusDone
-                        : order.status === "Em preparacao"
+                        : order.status === "Em preparação"
                           ? styles.statusPreparing
                           : styles.statusNew
                     }`}
@@ -351,10 +417,10 @@ export default function Admin() {
 
           <article className={styles.panel}>
             <header className={styles.panelHeader}>
-              <h2>Metricas (preview)</h2>
+              <h2>Métricas (preview)</h2>
             </header>
             <div className={styles.chartPlaceholder}>
-              <span>Grafico de vendas</span>
+              <span>Gráfico de vendas</span>
               <div className={styles.bars}>
                 <i style={{ height: "34%" }} />
                 <i style={{ height: "62%" }} />
@@ -387,7 +453,7 @@ export default function Admin() {
                     <p>
                       {product.category} | {product.price} | {product.status}
                     </p>
-                    <small>{product.description || "Sem descricao cadastrada."}</small>
+                    <small>{product.description || "Sem descrição cadastrada."}</small>
                   </div>
                   <div className={styles.catalogActions}>
                     <button type="button" onClick={() => openEditForm(product.id)}>
@@ -445,7 +511,7 @@ export default function Admin() {
                 />
               </label>
               <label>
-                Preco
+                Preço
                 <input
                   value={draft.price}
                   onChange={(e) => setDraft((old) => ({ ...old, price: e.target.value }))}
@@ -454,7 +520,7 @@ export default function Admin() {
                 />
               </label>
               <label>
-                Descricao
+                Descrição
                 <textarea
                   value={draft.description}
                   onChange={(e) => setDraft((old) => ({ ...old, description: e.target.value }))}
@@ -488,7 +554,7 @@ export default function Admin() {
                 </small>
               </label>
               <button type="submit" className={styles.primaryButton}>
-                {formMode === "create" ? "Salvar produto" : "Salvar alteracoes"}
+                {formMode === "create" ? "Salvar produto" : "Salvar alterações"}
               </button>
             </form>
           </div>

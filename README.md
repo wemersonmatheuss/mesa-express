@@ -34,3 +34,29 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Banco de dados (PostgreSQL + Prisma)
+
+O projeto ja esta preparado com Prisma e schema inicial do MesaExpress.
+
+1. Crie um banco PostgreSQL local chamado `mesa_express`.
+2. Copie `.env.example` para `.env`.
+3. Ajuste `DATABASE_URL` com usuario/senha/porta corretos.
+4. Gere o client e valide schema:
+
+```bash
+npm run db:generate
+npm run db:validate
+```
+
+5. Quando o banco estiver pronto, crie a migracao inicial:
+
+```bash
+npm run db:migrate -- --name init
+```
+
+6. Opcional: abrir o Prisma Studio:
+
+```bash
+npm run db:studio
+```

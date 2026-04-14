@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  KITCHEN
+  CASHIER
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  CLOSED
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum OrderStatus {
+  NEW
+  PREPARING
+  READY
+  DELIVERED
+  CANCELED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  passwordHash String
+  role         UserRole
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdSessions TableSession[] @relation("SessionCreatedBy")
+  closedSessions  TableSession[] @relation("SessionClosedBy")
+}
+
+model DiningTable {
+  id        String      @id @default(cuid())
+  number    Int         @unique
+  status    TableStatus @default(AVAILABLE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  sessions TableSession[]
+
+  @@index([status])
+}
+
+model TableSession {
+  id          String        @id @default(cuid())
+  tableId     String
+  status      SessionStatus @default(OPEN)
+  openedAt    DateTime      @default(now())
+  closedAt    DateTime?
+  createdById String?
+  closedById  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  table     DiningTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  createdBy User?       @relation("SessionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  closedBy  User?       @relation("SessionClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  orders    Order[]
+  payments  Payment[]
+
+  @@index([tableId, status])
+  @@index([openedAt])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive])
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  imagePath   String?
+  price       Decimal       @db.Decimal(10, 2)
+  status      ProductStatus @default(ACTIVE)
+  categoryId  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  orderItems OrderItem[]
+
+  @@index([categoryId, status])
+  @@index([name])
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  ticketNumber Int         @unique @default(autoincrement())
+  sessionId    String
+  customerName String
+  tableNumber  Int
+  status       OrderStatus @default(NEW)
+  note         String?
+  subtotal     Decimal     @db.Decimal(10, 2)
+  createdAt    DateTime    @default(now())
+  preparingAt  DateTime?
+  completedAt  DateTime?
+  canceledAt   DateTime?
+  deliveredAt  DateTime?
+
+  session TableSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  items   OrderItem[]
+
+  @@index([sessionId, status])
+  @@index([tableNumber, status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  productName String
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  lineTotal   Decimal  @db.Decimal(10, 2)
+  note        String?
+  createdAt   DateTime @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  sessionId     String
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(10, 2)
+  paidAt        DateTime?
+  referenceCode String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  session TableSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  @@index([sessionId, status])
+  @@index([paidAt])
+}

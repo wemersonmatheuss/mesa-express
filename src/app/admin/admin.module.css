@@ -118,6 +118,32 @@
   transform: translateY(-1px);
 }
 
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.minimalIcon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minimalIcon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -432,6 +458,22 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.aiSummaryBody {
+  padding: 18px 16px 22px;
+}
+
+.aiSummaryBody ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.aiSummaryBody li {
+  color: #d8d8de;
+  line-height: 1.6;
 }
 
 .catalogItem {
